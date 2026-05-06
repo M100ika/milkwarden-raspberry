@@ -1,0 +1,13 @@
+[Unit]
+Description=Milkwarden Edge
+After=network.target
+
+[Service]
+ExecStart=/home/milkwarden/raspberry/vmilka/bin/python /home/milkwarden/raspberry/src/main.py
+WorkingDirectory=/home/milkwarden/raspberry
+Restart=always
+RestartSec=5
+User=milkwarden
+
+[Install]
+WantedBy=multi-user.target

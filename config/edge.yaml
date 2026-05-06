@@ -1,0 +1,27 @@
+device_id: "milkwarden-edge-01"
+
+serial:
+  port: "/dev/ttyUSB0"
+  baud: 115200
+  timeout_sec: 2
+
+nextion:
+  enabled: false          # включить когда дисплей подключён
+  port: "/dev/ttyAMA0"
+  baud: 9600
+  timeout_sec: 1.0
+  components:
+    ip:        "ip{n}"
+    rfid:      "rfid{n}"
+    weight:    "weight{n}"
+    state:     "state{n}"
+    page_main: 0
+
+server:
+  enabled: false
+  url: "https://example.com/api/sessions"
+  timeout_sec: 10
+  batch_size: 50
+
+sync:
+  checks_per_day: 5

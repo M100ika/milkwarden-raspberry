@@ -1,0 +1,50 @@
+# Конфиг тестов Nextion NX4827T043 (480×272, /dev/ttyAMA0)
+# Флаги tests.*.enabled включают/выключают отдельные тесты.
+# tests.enabled — мастер-выключатель: false отменяет всё.
+
+nextion:
+  port: "/dev/ttyAMA0"
+  baud: 9600
+  timeout_sec: 1.0
+
+  # Шаблоны имён компонентов HMI.
+  # {n} → номер стойки 1-4.
+  # Поменяй под своё дерево объектов в Nextion Editor.
+  components:
+    ip:        "ip{n}"
+    rfid:      "rfid{n}"
+    weight:    "weight{n}"
+    state:     "state{n}"
+    page_main: 0
+
+tests:
+  enabled: true   # false — пропустить всё
+
+  connection:
+    enabled: true
+    # Открывает порт, включает bkcmd=3 и делает get sys.time.
+    # Проходит, если дисплей вернул хоть какой-то ответ.
+
+  text_display:
+    enabled: true
+    # Переключается на page_main, записывает "RFID-TEST-N",
+    # "0.00 kg", "TEST" в компоненты каждой из 4 стоек.
+
+  simulate_session:
+    enabled: true
+    # Имитирует одну стойку:  IDLE → COW_PRESENT → MILKING → IDLE.
+    # Вес растёт от weight_start_g до weight_end_g за duration_sec.
+    stall_id: 1
+    ip: "192.168.1.1"
+    rfid: "E20068151234ABCD"
+    weight_start_g: 0.0
+    weight_end_g: 14500.0
+    duration_sec: 20
+    snap_interval_ms: 500
+
+  simulate_all_stalls:
+    enabled: false
+    # Имитирует все 4 стойки с разными фазами дойки одновременно.
+    # Однопоточно: стойки обновляются по очереди в каждом тике.
+    snap_interval_ms: 500
+    duration_sec: 30
