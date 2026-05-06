@@ -40,10 +40,11 @@ class NextionDisplay:
         self._timeout = timeout
         self._ser: serial.Serial | None = None
         self._components: dict = components or {
-            "ip":     "ip{n}",
-            "rfid":   "rfid{n}",
-            "weight": "weight{n}",
-            "state":  "state{n}",
+            "ip":     "t0",
+            "rfid":   "t1",
+            "weight": "t2",
+            "stall":  "t3",
+            "state":  "p0",
         }
 
     def connect(self) -> bool:
@@ -121,9 +122,9 @@ class NextionDisplay:
         weight: str,
         state: bool,
     ) -> None:
-        n = stall
         c = self._components
-        self.set_text(c["ip"].format(n=n), ip or "---")
-        self.set_text(c["rfid"].format(n=n), rfid[:16] if rfid else "---")
-        self.set_text(c["weight"].format(n=n), weight)
-        self.set_text(c["state"].format(n=n), "ACTIVE" if state else "IDLE")
+        self.set_text(c["ip"], ip or "---")
+        self.set_text(c["rfid"], rfid[:16] if rfid else "---")
+        self.set_text(c["weight"], weight)
+        self.set_text(c["stall"], f"{stall:02d}")
+        self.set_visible(c["state"], state)

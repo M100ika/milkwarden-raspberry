@@ -7,14 +7,15 @@ serial:
 
 nextion:
   enabled: false          # включить когда дисплей подключён
-  port: "/dev/ttyAMA0"
+  port: "/dev/serial0"
   baud: 9600
   timeout_sec: 1.0
   components:
-    ip:        "ip{n}"
-    rfid:      "rfid{n}"
-    weight:    "weight{n}"
-    state:     "state{n}"
+    ip:    "t0"
+    rfid:  "t1"
+    weight: "t2"
+    stall: "t3"
+    state: "p0"
     page_main: 0
 
 server:
