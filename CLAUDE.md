@@ -26,7 +26,7 @@ Master ESP32 (поставщик данных): `../integrated/esp32/esp32_maste
 | Интерфейс | Устройство | Порт RPi | Baud |
 |-----------|-----------|----------|------|
 | USB → Master ESP32 | `/dev/ttyUSB0` (или `ttyACM0`) | USB | 115200 |
-| UART (GPIO14/GPIO15) | Nextion | `/dev/ttyAMA0` | 9600 — **не реализовано** |
+| UART (GPIO14/GPIO15) | Nextion Display | `/dev/serial0` | 9600 |
 
 **RPi 5, Raspberry Pi OS Bookworm (64-bit)**
 
