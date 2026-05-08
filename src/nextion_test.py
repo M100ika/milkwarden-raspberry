@@ -194,7 +194,6 @@ def main() -> None:
         port=nx["port"],
         baud=nx.get("baud", 9600),
         timeout=nx.get("timeout_sec", 1.0),
-        components=nx.get("components"),
     )
 
     print(f"\nNextion Test  {nx['port']} @ {nx.get('baud', 9600)} baud")

@@ -43,6 +43,30 @@ Master ESP32 (поставщик данных): `../integrated/esp32/esp32_maste
 
 Каждая строка — JSON, заканчивается `\n`. Поле `type` определяет тип.
 
+
+## Nextion Integration Protocol (RPi 5 Specifics)
+
+При отправке данных из SnapshotPacket на дисплей строго соблюдать следующие правила:
+
+  1. Терминатор команды: Каждая команда ОБЯЗАТЕЛЬНО заканчивается тремя байтами \xff\xff\xff.
+
+  2. Тайминги (RPi 5): Между каждой командой ser.write() должна быть пауза time.sleep(0.05). Без паузы дисплей переполняет буфер и возвращает ошибку 0x1A.
+
+  3. Принудительный Flush: Использовать ser.flush() после записи, чтобы гарантировать уход данных из системного буфера RPi 5.
+
+  4. Кодировка: Использовать .encode('ascii') для команд. Для кириллицы требуется проверка поддержки шрифтом в Nextion Editor.
+
+
+## Структура маппинга дисплея (4 секции)
+Данные из SnapshotPacket маппятся по ID слава (id 1–4):
+
+  Слой,Описание,Nextion ID (Base = (id-1)*6),Пример (id=1)
+  IP,IP адрес slave,t[Base],t0
+  RFID,Текущая метка,t[Base + 1],t1
+  Weight,Вес (float),t[Base + 3],t3
+  Time,Время события,t[Base + 4],t4
+  State,Видимость (p0-p3),p[id - 1],p0
+
 ### SnapshotPacket (type = "snap") — каждые 500 мс от каждого slave
 
 ```json
@@ -192,11 +216,18 @@ raspberry/
 ## reader.py — чтение UART
 
 ```python
-# Открывает serial-порт, читает построчно.
-# line → json.loads → если type=="session" → db.save_session()
-# line → json.loads → если type=="snap"    → pass (Nextion не реализован)
-# Обрабатывает JSONDecodeError, serial.SerialException без крашей.
-# При потере порта — переподключение через 5 секунд.
+  # Открывает serial-порт, читает построчно.
+  # line → json.loads → если type=="session" → db.save_session()
+  # line → json.loads → если type=="snap"    → pass
+   
+  #   Действие RPi при type=="snap":
+  # 1. Извлечь id (1–4).
+  # 2. Рассчитать целевые ID компонентов Nextion.
+  # 3. Сформировать команды (например, t0.txt="192...").
+  # 4. Отправить в /dev/serial0 с соблюдением Nextion Integration Protocol.
+
+  # Обрабатывает JSONDecodeError, serial.SerialException без крашей.
+  # При потере порта — переподключение через 5 секунд.
 ```
 
 ## UART-порт
@@ -266,3 +297,7 @@ pip install pyserial httpx PyYAML APScheduler
 
 Репозиторий: https://github.com/M100ika/milkwarden-integrated  
 Ветка: `main`
+
+
+## Important for AI: 
+When writing Nextion code, use serial.Serial('/dev/serial0', 9600). Every command must end with + b'\xff\xff\xff', followed by ser.flush() and time.sleep(0.05). Display has 4 sections; components are t0, t6, t12, t18 (IP), t1, t7... (RFID), t3, t9... (Weight), t4, t10... (Time), and p0-p3 (Visibility).

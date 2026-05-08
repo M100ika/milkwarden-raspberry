@@ -27,25 +27,32 @@ _RETURN_CODE = {
 }
 
 
+def _stall_components(stall_id: int) -> dict:
+    """Возвращает ID компонентов Nextion для секции stall_id (1–4).
+    Base = (stall_id - 1) * 6
+    IP=t[base], RFID=t[base+1], Weight=t[base+3], Time=t[base+4], Vis=p[stall_id-1]
+    """
+    base = (stall_id - 1) * 6
+    return {
+        "ip":     f"t{base}",
+        "rfid":   f"t{base + 1}",
+        "weight": f"t{base + 3}",
+        "time":   f"t{base + 4}",
+        "state":  f"p{stall_id - 1}",
+    }
+
+
 class NextionDisplay:
     def __init__(
         self,
         port: str,
         baud: int = 9600,
         timeout: float = 1.0,
-        components: dict | None = None,
     ):
         self._port = port
         self._baud = baud
         self._timeout = timeout
         self._ser: serial.Serial | None = None
-        self._components: dict = components or {
-            "ip":     "t0",
-            "rfid":   "t1",
-            "weight": "t2",
-            "stall":  "t3",
-            "state":  "p0",
-        }
 
     def connect(self) -> bool:
         try:
@@ -74,6 +81,8 @@ class NextionDisplay:
         if not self._ser or not self._ser.is_open:
             raise RuntimeError("Nextion not connected")
         self._ser.write(cmd.encode("ascii") + _END)
+        self._ser.flush()
+        time.sleep(0.05)
         log.debug("→ %s", cmd)
 
     def read_response(self, timeout: float = 0.5) -> bytes | None:
@@ -110,7 +119,6 @@ class NextionDisplay:
         self.send(f'vis {component},{1 if visible else 0}')
 
     def set_backlight(self, brightness: int) -> None:
-        """Яркость 0–100."""
         self.send(f'dim={brightness}')
 
     def update_display(
@@ -120,11 +128,13 @@ class NextionDisplay:
         ip: str,
         rfid: str,
         weight: str,
+        timestamp: str = "",
         state: bool,
     ) -> None:
-        c = self._components
-        self.set_text(c["ip"], ip or "---")
-        self.set_text(c["rfid"], rfid[:16] if rfid else "---")
+        c = _stall_components(stall)
+        self.set_text(c["ip"],     ip or "---")
+        self.set_text(c["rfid"],   rfid[:16] if rfid else "---")
         self.set_text(c["weight"], weight)
-        self.set_text(c["stall"], f"{stall:02d}")
+        if timestamp:
+            self.set_text(c["time"], timestamp)
         self.set_visible(c["state"], state)

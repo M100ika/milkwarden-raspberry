@@ -45,10 +45,13 @@ def _handle_line(raw: bytes, conn: sqlite3.Connection, display: "NextionDisplay 
         log.debug("Session saved: esp_id=%s rfid=%s", packet.get("id"), packet.get("rfid"))
 
     elif ptype == "snap" and display is not None:
+        ts = packet.get("ts", 0)
+        ts_str = time.strftime("%H:%M:%S", time.localtime(ts)) if ts else ""
         display.update_display(
             stall=packet["id"],
-            ip=packet.get("ip", ""),
+            ip="",
             rfid=packet.get("rfid", ""),
             weight=f"{packet.get('weight', 0) / 1000:.2f} kg",
+            timestamp=ts_str,
             state=packet.get("state", 0) >= 1,
         )

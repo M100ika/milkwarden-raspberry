@@ -31,7 +31,6 @@ def main() -> None:
             port=nx_cfg["port"],
             baud=nx_cfg.get("baud", 9600),
             timeout=nx_cfg.get("timeout_sec", 1.0),
-            components=nx_cfg.get("components"),
         )
         if not display.connect():
             log.warning("Nextion display unavailable — snap forwarding disabled")
