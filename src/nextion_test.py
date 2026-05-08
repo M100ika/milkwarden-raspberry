@@ -72,7 +72,7 @@ def test_text_display(display: NextionDisplay, cfg: dict) -> bool:
                 stall=n,
                 ip=f"192.168.1.{n}",
                 rfid=f"RFID-TEST-{n}",
-                weight="0.00 kg",
+                weight="0.00",
                 state=False,
             )
             time.sleep(0.05)
@@ -103,22 +103,22 @@ def test_simulate_session(display: NextionDisplay, cfg: dict) -> bool:
     print(f"  [{name}] стойка {stall_id}, {duration}s, шаг {interval*1000:.0f}ms")
     try:
         print("    IDLE ...")
-        display.update_display(stall=stall_id, ip=ip, rfid="", weight="0.00 kg", state=False)
+        display.update_display(stall=stall_id, ip=ip, rfid="", weight="0.00", state=False)
         time.sleep(1.0)
 
         print("    COW_PRESENT ...")
-        display.update_display(stall=stall_id, ip=ip, rfid=rfid, weight=f"{w_start/1000:.2f} kg", state=True)
+        display.update_display(stall=stall_id, ip=ip, rfid=rfid, weight=f"{w_start/1000:.2f}", state=True)
         time.sleep(1.0)
 
         steps = max(1, int(duration / interval))
         print(f"    MILKING ({steps} шагов) ...")
         for i in range(steps + 1):
             w = w_start + (w_end - w_start) * (i / steps)
-            display.update_display(stall=stall_id, ip=ip, rfid=rfid, weight=f"{w/1000:.2f} kg", state=True)
+            display.update_display(stall=stall_id, ip=ip, rfid=rfid, weight=f"{w/1000:.2f}", state=True)
             time.sleep(interval)
 
         print("    IDLE (сессия завершена)")
-        display.update_display(stall=stall_id, ip=ip, rfid="", weight="0.00 kg", state=False)
+        display.update_display(stall=stall_id, ip=ip, rfid="", weight="0.00", state=False)
 
         print(f"  {_PASS} {name}")
         return True
@@ -159,7 +159,7 @@ def test_simulate_all_stalls(display: NextionDisplay, cfg: dict) -> bool:
                     stall=s["id"],
                     ip=s["ip"],
                     rfid=s["rfid"],
-                    weight=f"{w/1000:.2f} kg",
+                    weight=f"{w/1000:.2f}",
                     state=s["active"],
                 )
             time.sleep(interval)
