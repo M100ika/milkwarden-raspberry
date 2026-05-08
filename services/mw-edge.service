@@ -1,13 +1,20 @@
 [Unit]
-Description=Milkwarden Edge
+Description=Milkwarden Edge — UART reader + sync
 After=network.target
+Wants=network.target
 
 [Service]
-ExecStart=/home/milkwarden/raspberry/vmilka/bin/python /home/milkwarden/raspberry/src/main.py
-WorkingDirectory=/home/milkwarden/raspberry
+ExecStart=/home/admin/milka/milkwarden-raspberry/vmilka/bin/python /home/admin/milka/milkwarden-raspberry/src/main.py
+WorkingDirectory=/home/admin/milka/milkwarden-raspberry
+User=admin
+Group=admin
+
 Restart=always
 RestartSec=5
-User=milkwarden
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=mw-edge
 
 [Install]
 WantedBy=multi-user.target
