@@ -49,9 +49,9 @@ def _handle_line(raw: bytes, conn: sqlite3.Connection, display: "NextionDisplay 
         ts_str = time.strftime("%H:%M:%S", time.localtime(ts)) if ts else ""
         display.update_display(
             stall=packet["id"],
-            ip="",
+            ip=packet.get("ip", ""),
             rfid=packet.get("rfid", ""),
-            weight=f"{packet.get('weight', 0) / 1000:.2f} kg",
+            weight=f"{packet.get('weight', 0) / 1000:.2f}",
             timestamp=ts_str,
             state=packet.get("state", 0) >= 1,
         )
