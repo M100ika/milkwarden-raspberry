@@ -6,7 +6,7 @@ serial:
   timeout_sec: 2
 
 nextion:
-  enabled: false          # включить когда дисплей подключён
+  enabled: true
   port: "/dev/serial0"
   baud: 9600
   timeout_sec: 1.0

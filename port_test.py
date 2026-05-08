@@ -40,6 +40,8 @@ def read_lines(port: str, baud: int, timeout: float, n: int = 15) -> list[str]:
 
 def is_milkwarden(lines: list[str]) -> bool:
     for line in lines:
+        if '"type":"snap"' in line or '"type":"session"' in line:
+            return True
         try:
             if json.loads(line).get("type") in ("snap", "session"):
                 return True
