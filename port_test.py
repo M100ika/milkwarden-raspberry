@@ -13,7 +13,7 @@ import time
 
 import serial
 
-BAUDS = [115200, 9600, 57600, 38400]
+BAUDS = [115200, 921600, 460800, 230400, 74880, 57600, 38400, 19200, 9600]
 
 
 def candidates() -> list[str]:
