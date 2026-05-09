@@ -1,5 +1,12 @@
 device_id: "milkwarden-edge-01"
 
+# esp_id → stall number mapping
+stall_map:
+  1: 1
+  2: 2
+  3: 3
+  4: 4
+
 serial:
   port: "/dev/ttyUSB0"
   baud: 115200
