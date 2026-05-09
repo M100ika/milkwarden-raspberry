@@ -1,10 +1,7 @@
-import serial
-import time
-
-ser = serial.Serial('/dev/serial0', 9600, timeout=1)
-# Отправляем команду с терминаторами
-ser.write(b'HELLO_SELF' + b'\xff\xff\xff')
-time.sleep(0.1)
-res = ser.read(ser.in_waiting)
-
-print(f"Пришло обратно: {res}")
+import serial, json
+s = serial.Serial('/dev/ttyUSB0', 115200, timeout=2)
+for _ in range(5):
+    line = s.readline()
+    print(repr(line))
+    try: print(json.loads(line))
+    except Exception as e: print('ERR:', e)
