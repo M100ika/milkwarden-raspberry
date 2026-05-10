@@ -1,6 +1,9 @@
 import json
 import logging
+import os
 import sqlite3
+import termios
+import threading
 import time
 from typing import TYPE_CHECKING
 
@@ -13,6 +16,21 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 
+_NO_DATA_REOPEN_SEC = 30
+_WATCHDOG_SEC = 40
+
+
+def _disable_hupcl(port: str) -> None:
+    """Disable HUPCL so the OS does not pulse DTR when the port is opened/closed."""
+    try:
+        fd = os.open(port, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK)
+        attrs = termios.tcgetattr(fd)
+        attrs[2] &= ~termios.HUPCL
+        termios.tcsetattr(fd, termios.TCSANOW, attrs)
+        os.close(fd)
+    except OSError as e:
+        log.warning("Could not disable HUPCL on %s: %s", port, e)
+
 
 def _resolve_stall(cfg: dict, esp_id: int) -> int:
     return cfg.get("stall_map", {}).get(esp_id, esp_id)
@@ -22,7 +40,8 @@ def reader_loop(cfg: dict, conn: sqlite3.Connection, display: "NextionDisplay | 
     port = cfg["serial"]["port"]
     baud = cfg["serial"]["baud"]
     timeout = cfg["serial"]["timeout_sec"]
-    first_open = True
+
+    _disable_hupcl(port)
 
     while True:
         try:
@@ -30,27 +49,49 @@ def reader_loop(cfg: dict, conn: sqlite3.Connection, display: "NextionDisplay | 
             ser.port = port
             ser.baudrate = baud
             ser.timeout = timeout
-            ser.dtr = False  # must be set BEFORE open() to prevent ESP32 auto-reset
+            ser.dtr = False
             ser.rts = False
             ser.open()
-            if first_open:
-                first_open = False
-                log.info("First start: waiting 15s for ESP32 to connect WiFi...")
-                time.sleep(15)
-            else:
-                time.sleep(0.5)
-            ser.reset_input_buffer()
+            time.sleep(0.5)
             log.info("Serial opened: %s", port)
+
+            last_data = [time.monotonic()]
+
+            def _watchdog(s=ser, ld=last_data):
+                while s.isOpen():
+                    if time.monotonic() - ld[0] > _WATCHDOG_SEC:
+                        log.warning("Watchdog: no data for %ds, closing port to unblock readline", _WATCHDOG_SEC)
+                        try:
+                            s.close()
+                        except Exception:
+                            pass
+                        return
+                    time.sleep(1)
+
+            threading.Thread(target=_watchdog, daemon=True).start()
+
             try:
                 while True:
                     raw = ser.readline()
                     if raw:
+                        last_data[0] = time.monotonic()
                         _handle_line(raw, cfg, conn, display)
+                    else:
+                        if time.monotonic() - last_data[0] >= _NO_DATA_REOPEN_SEC:
+                            log.warning("No data for %ds — reopening port", _NO_DATA_REOPEN_SEC)
+                            break
+            except serial.SerialException as e:
+                log.warning("Serial exception (watchdog or device error): %s", e)
             finally:
-                ser.close()
+                try:
+                    ser.close()
+                except Exception:
+                    pass
+
         except serial.SerialException as e:
             log.warning("Serial error: %s — retry in 5s", e)
-            time.sleep(5)
+
+        time.sleep(5)
 
 
 def _handle_line(raw: bytes, cfg: dict, conn: sqlite3.Connection, display: "NextionDisplay | None") -> None:
