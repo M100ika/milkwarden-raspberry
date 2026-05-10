@@ -25,13 +25,20 @@ def reader_loop(cfg: dict, conn: sqlite3.Connection, display: "NextionDisplay | 
 
     while True:
         try:
-            with serial.Serial(port, baud, timeout=timeout) as ser:
-                log.info("Serial opened: %s", port)
+            ser = serial.Serial(port, baud, timeout=timeout)
+            # Prevent DTR/RTS from triggering ESP32 auto-reset via the CH340/CP2102 circuit
+            ser.dtr = False
+            ser.rts = False
+            time.sleep(0.1)
+            ser.reset_input_buffer()
+            log.info("Serial opened: %s", port)
+            try:
                 while True:
                     raw = ser.readline()
                     if raw:
-                        log.info("raw: %r", raw[:80])
                         _handle_line(raw, cfg, conn, display)
+            finally:
+                ser.close()
         except serial.SerialException as e:
             log.warning("Serial error: %s — retry in 5s", e)
             time.sleep(5)
