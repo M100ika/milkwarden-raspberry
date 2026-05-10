@@ -35,8 +35,8 @@ def reader_loop(cfg: dict, conn: sqlite3.Connection, display: "NextionDisplay | 
             ser.open()
             if first_open:
                 first_open = False
-                log.info("First start: waiting 70s for ESP32 to connect WiFi...")
-                time.sleep(70)
+                log.info("First start: waiting 15s for ESP32 to connect WiFi...")
+                time.sleep(15)
             else:
                 time.sleep(0.5)
             ser.reset_input_buffer()
