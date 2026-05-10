@@ -1,6 +1,7 @@
 import logging
 import sys
 import threading
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -27,16 +28,21 @@ def main() -> None:
     nx_cfg = cfg.get("nextion", {})
     display: NextionDisplay | None = None
     if nx_cfg.get("enabled", False):
-        display = NextionDisplay(
+        nx = NextionDisplay(
             port=nx_cfg["port"],
             baud=nx_cfg.get("baud", 9600),
             timeout=nx_cfg.get("timeout_sec", 1.0),
         )
-        if not display.connect():
-            log.warning("Nextion display unavailable — snap forwarding disabled")
-            display = None
+        # Retry loop: at boot the serial port may not be ready yet
+        for attempt in range(1, 13):
+            if nx.connect():
+                display = nx
+                log.info("Nextion display connected: %s", nx_cfg["port"])
+                break
+            log.warning("Nextion connect attempt %d/12 failed — retrying in 5s", attempt)
+            time.sleep(5)
         else:
-            log.info("Nextion display connected: %s", nx_cfg["port"])
+            log.warning("Nextion display unavailable after retries — snap forwarding disabled")
 
     checks_per_day: int = cfg.get("sync", {}).get("checks_per_day", 5)
     interval_hours = 24 / checks_per_day

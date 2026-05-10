@@ -1,7 +1,7 @@
 [Unit]
 Description=Milkwarden Edge — UART reader + sync
-After=network.target
-Wants=network.target
+After=network.target dev-serial0.device dev-ttyUSB0.device
+Wants=network.target dev-serial0.device
 
 [Service]
 ExecStart=/home/admin/milka/milkwarden-raspberry/vmilka/bin/python /home/admin/milka/milkwarden-raspberry/src/main.py
