@@ -4,7 +4,6 @@ After=network.target dev-serial0.device dev-ttyUSB0.device
 Wants=network.target dev-serial0.device
 
 [Service]
-ExecStartPre=/bin/sleep 35
 ExecStart=/home/admin/milka/milkwarden-raspberry/vmilka/bin/python /home/admin/milka/milkwarden-raspberry/src/main.py
 WorkingDirectory=/home/admin/milka/milkwarden-raspberry
 User=admin

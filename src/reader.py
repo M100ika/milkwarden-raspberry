@@ -22,14 +22,23 @@ def reader_loop(cfg: dict, conn: sqlite3.Connection, display: "NextionDisplay | 
     port = cfg["serial"]["port"]
     baud = cfg["serial"]["baud"]
     timeout = cfg["serial"]["timeout_sec"]
+    first_open = True
 
     while True:
         try:
-            ser = serial.Serial(port, baud, timeout=timeout)
-            # Prevent DTR/RTS from triggering ESP32 auto-reset via the CH340/CP2102 circuit
-            ser.dtr = False
+            ser = serial.Serial()
+            ser.port = port
+            ser.baudrate = baud
+            ser.timeout = timeout
+            ser.dtr = False  # must be set BEFORE open() to prevent ESP32 auto-reset
             ser.rts = False
-            time.sleep(0.1)
+            ser.open()
+            if first_open:
+                first_open = False
+                log.info("First start: waiting 70s for ESP32 to connect WiFi...")
+                time.sleep(70)
+            else:
+                time.sleep(0.5)
             ser.reset_input_buffer()
             log.info("Serial opened: %s", port)
             try:
