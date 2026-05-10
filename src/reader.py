@@ -49,6 +49,8 @@ def _handle_line(raw: bytes, cfg: dict, conn: sqlite3.Connection, display: "Next
         packet = json.loads(raw.decode("utf-8", errors="replace").strip())
     except json.JSONDecodeError:
         return
+    if not isinstance(packet, dict):
+        return
 
     ptype = packet.get("type")
     stall = _resolve_stall(cfg, packet.get("id", 0))
@@ -60,8 +62,6 @@ def _handle_line(raw: bytes, cfg: dict, conn: sqlite3.Connection, display: "Next
     elif ptype == "snap" and display is not None:
         ts = packet.get("ts", 0)
         ts_str = time.strftime("%H:%M:%S", time.localtime(ts)) if ts else ""
-        log.info("snap stall=%s weight=%.1f state=%s → sending to Nextion",
-                 stall, packet.get("weight", 0), packet.get("state", 0))
         try:
             display.update_display(
                 stall=stall,
