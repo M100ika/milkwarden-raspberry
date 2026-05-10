@@ -30,6 +30,7 @@ def reader_loop(cfg: dict, conn: sqlite3.Connection, display: "NextionDisplay | 
                 while True:
                     raw = ser.readline()
                     if raw:
+                        log.info("raw: %r", raw[:80])
                         _handle_line(raw, cfg, conn, display)
         except serial.SerialException as e:
             log.warning("Serial error: %s — retry in 5s", e)
