@@ -57,8 +57,28 @@ class NextionDisplay:
     def connect(self) -> bool:
         try:
             self._ser = serial.Serial(self._port, self._baud, timeout=self._timeout)
-            time.sleep(0.1)
             self._ser.reset_input_buffer()
+            # Wait for Nextion ready signal 0x88 0xFF 0xFF 0xFF (up to 10s)
+            self._ser.timeout = 10.0
+            ready = False
+            deadline = time.monotonic() + 10.0
+            while time.monotonic() < deadline:
+                b = self._ser.read(1)
+                if b == b'\x88':
+                    self._ser.read(3)  # consume 0xFF 0xFF 0xFF
+                    ready = True
+                    break
+            self._ser.timeout = self._timeout
+            self._ser.reset_input_buffer()
+            if ready:
+                log.info("Nextion ready signal received")
+            else:
+                log.warning("Nextion ready signal not received (display may already be up)")
+            # Ensure we are on the main page
+            time.sleep(0.1)
+            self._ser.write(b'page 0' + _END)
+            self._ser.flush()
+            time.sleep(0.05)
             log.info("Nextion connected: %s @ %d", self._port, self._baud)
             return True
         except serial.SerialException as e:
