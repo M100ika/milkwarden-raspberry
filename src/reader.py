@@ -52,11 +52,16 @@ def _handle_line(raw: bytes, cfg: dict, conn: sqlite3.Connection, display: "Next
     elif ptype == "snap" and display is not None:
         ts = packet.get("ts", 0)
         ts_str = time.strftime("%H:%M:%S", time.localtime(ts)) if ts else ""
-        display.update_display(
-            stall=stall,
-            ip=packet.get("ip", ""),
-            rfid=packet.get("rfid", ""),
-            weight=f"{packet.get('weight', 0) / 1000:.2f}",
-            timestamp=ts_str,
-            state=packet.get("state", 0) >= 1,
-        )
+        log.info("snap stall=%s weight=%.1f state=%s → sending to Nextion",
+                 stall, packet.get("weight", 0), packet.get("state", 0))
+        try:
+            display.update_display(
+                stall=stall,
+                ip=packet.get("ip", ""),
+                rfid=packet.get("rfid", ""),
+                weight=f"{packet.get('weight', 0) / 1000:.2f}",
+                timestamp=ts_str,
+                state=packet.get("state", 0) >= 1,
+            )
+        except Exception as e:
+            log.error("update_display error: %s", e, exc_info=True)
